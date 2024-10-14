@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+#game-container {
+    text-align: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#controls {
+    margin-bottom: 20px;
+}
+
+#controls > * {
+    margin: 5px;
+}
+
+#info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#cards-grid {
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+}
+
+.card {
+    width: 100px;
+    height: 100px;
+    perspective: 1000px;
+    position: relative;
+    transition: transform 0.3s ease;
+    border: 2px solid #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.card .front, .card .back {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+    transition: transform 0.3s;
+    border-radius: 8px;
+    background-size: contain;  /* 改為 contain */
+    background-position: center;
+    background-repeat: no-repeat;  /* 添加這行 */
+    background-color: white;  /* 添加這行 */
+}
+
+.card .front {
+    transform: rotateY(0deg);
+}
+
+.card .back {
+    transform: rotateY(180deg);
+}
+
+.card.flipped .front {
+    transform: rotateY(180deg);
+}
+
+.card.flipped .back {
+    transform: rotateY(360deg);
+}
+
+.card.matched {
+    opacity: 0.5;
+}
+
+#timer, #score {
+    font-size: 18px;
+}
+
+/* 根據網格大小調整卡片尺寸 */
+#cards-grid.size-2 .card {
+    width: 150px;
+    height: 150px;
+}
+
+#cards-grid.size-4 .card {
+    width: 100px;
+    height: 100px;
+}
+
+#cards-grid.size-6 .card {
+    width: 80px;
+    height: 80px;
+}
