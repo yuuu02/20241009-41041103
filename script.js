@@ -26,6 +26,8 @@ let matchedPairs = 0;
 let cardImages = [];
 let frontImage = '';
 let gridSize;
+let isGameRunning = false;
+let isCountdownFinished = false;
 
 // 主題設置
 const themes = {
@@ -33,14 +35,14 @@ const themes = {
         front: 'img/theme1/front.jpg',
         backs: [
             'img/theme1/image1.png', 'img/theme1/image2.png', 'img/theme1/image3.png', 'img/theme1/image4.png',
-            'img/theme1/image5.png', 'img/theme1/image6.png', 'img/theme1/image7.png', 'img/theme1/image8.png','img/theme1/image9.jpg'
+            'img/theme1/image5.png', 'img/theme1/image6.png', 'img/theme1/image7.png', 'img/theme1/image8.png', 'img/theme1/image9.jpg'
         ]
     },
     theme2: {
         front: 'img/theme2/front.png',
         backs: [
             'img/theme2/image1.jpg', 'img/theme2/image2.jpg', 'img/theme2/image3.jpg', 'img/theme2/image4.jpg',
-            'img/theme2/image5.jpg', 'img/theme2/image6.jpg', 'img/theme2/image7.jpg', 'img/theme2/image8.jpg','img/theme2/image9.jpg'
+            'img/theme2/image5.jpg', 'img/theme2/image6.jpg', 'img/theme2/image7.jpg', 'img/theme2/image8.jpg', 'img/theme2/image9.jpg'
         ]
     }
 };
@@ -99,6 +101,28 @@ async function createCardElements() {
     document.querySelectorAll('.card').forEach(card => card.classList.add('flipped'));
 }
 
+// 新增 hideAllCards 函數
+function hideAllCards() {
+    console.log('Hiding all cards');
+    const cards = document.querySelectorAll('.card');
+    console.log(`Found ${cards.length} cards to hide`);
+    cards.forEach((card, index) => {
+        card.style.display = 'none';
+        console.log(`Card ${index} hidden`);
+    });
+}
+
+// 新增 showAllCards 函數
+function showAllCards() {
+    console.log('Showing all cards');
+    const cards = document.querySelectorAll('.card');
+    console.log(`Found ${cards.length} cards`);
+    cards.forEach((card, index) => {
+        card.style.display = 'block';
+        card.classList.remove('flipped'); // 顯示背面
+        console.log(`Card ${index} displayed and flipped`); 
+    });
+}
 // 洗牌函數
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -110,14 +134,35 @@ function shuffle(array) {
 
 // 開始遊戲
 function startGame() {
+    console.log('Starting game');
+    if (isGameRunning) {
+        console.log('Game is already running');
+        return;
+    }
+    
     resetGame();
     startBtn.style.display = 'none';
     restartBtn.style.display = 'inline-block';
     restartBtn.textContent = '重新開始';
     countdown = parseInt(countdownTimeSelect.value);
+    isCountdownFinished = false;
     updateCountdown();
+    
+    console.log('Displaying cards grid');
     cardsGrid.style.display = 'grid';
+    
+    console.log('Showing all cards');
+    showAllCards();
+
     timer = setInterval(updateCountdown, 1000);
+    isGameRunning = true;
+
+    // 禁用主題和網格大小選擇
+    themeSelect.disabled = true;
+    gridSizeSelect.disabled = true;
+    countdownTimeSelect.disabled = true;
+    
+    console.log('Game started successfully');
 }
 
 // 更新倒計時
@@ -126,24 +171,31 @@ function updateCountdown() {
     countdownElement.textContent = countdown;
     if (countdown === 0) {
         clearInterval(timer);
-        lockBoard = false;
-        const cards = document.querySelectorAll('.card');
-        let index = 0;
-
-        const flipNextCard = () => {
-            if (index < cards.length) {
-                cards[index].classList.remove('flipped');
-                flipSound.play();
-                index++;
-                setTimeout(flipNextCard, 250);
-            }
-        };
-
-        flipNextCard();
+        isCountdownFinished = true;
+        flipAllCardsFront();  // 倒計時結束時翻到正面
     } else if (countdown < 0) {
         clearInterval(timer);
         countdownElement.textContent = 0;
     }
+}
+
+// 新增 flipAllCardsFront 函數
+function flipAllCardsFront() {
+    const cards = document.querySelectorAll('.card');
+    let index = 0;
+
+    const flipNextCard = () => {
+        if (index < cards.length) {
+            cards[index].classList.remove('flipped');
+            flipSound.play();
+            index++;
+            setTimeout(flipNextCard, 100);
+        } else {
+            lockBoard = false; // 允許玩家開始翻牌
+        }
+    };
+
+    flipNextCard();
 }
 
 // 重置遊戲
@@ -155,13 +207,41 @@ function resetGame() {
     clearInterval(timer);
     countdown = parseInt(countdownTimeSelect.value);
     countdownElement.textContent = countdown;
+    isCountdownFinished = false;
     createCardElements();
     cardsGrid.style.display = 'none';
+    isGameRunning = false;
+
+    // 重新啟用主題和網格大小選擇
+    themeSelect.disabled = false;
+    gridSizeSelect.disabled = false;
+    countdownTimeSelect.disabled = false;
+}
+
+
+// 新增 flipAllCards 函數
+function flipAllCards() {
+    const cards = document.querySelectorAll('.card');
+    let index = 0;
+
+    const flipNextCard = () => {
+        if (index < cards.length) {
+            cards[index].classList.add('flipped');
+            flipSound.play();
+            index++;
+            setTimeout(flipNextCard, 100);
+        } else {
+            lockBoard = false; // 允許玩家開始翻牌
+        }
+    };
+
+    flipNextCard();
 }
 
 // 翻牌
 function flipCard() {
     if (lockBoard) return;
+    if (!isCountdownFinished) return; // 如果倒數未結束，不允許翻牌
     if (this === firstCard) return;
 
     flipSound.play();
@@ -224,6 +304,7 @@ function resetBoard() {
 // 結束遊戲
 function endGame() {
     clearInterval(timer);
+    isGameRunning = false;
     Swal.fire({
         title: '恭喜！',
         text: `你已經成功配對所有卡片！得分：${score}`,
@@ -236,6 +317,11 @@ function endGame() {
         startBtn.style.display = 'inline-block';
         restartBtn.style.display = 'none';
     });
+
+    // 重新啟用主題和網格大小選擇
+    themeSelect.disabled = false;
+    gridSizeSelect.disabled = false;
+    countdownTimeSelect.disabled = false;
 }
 
 // 更新已配對卡片的可見性
@@ -304,7 +390,8 @@ async function initGame() {
     countdown = parseInt(countdownTimeSelect.value);
     countdownElement.textContent = countdown;
     updateMatchedCardsVisibility();
+    cardsGrid.style.display = 'grid';
+    hideAllCards();  // 確保初始時所有卡片都是隱藏的
 }
-
 // 當頁面加載完成時初始化遊戲
 window.addEventListener('load', initGame);
